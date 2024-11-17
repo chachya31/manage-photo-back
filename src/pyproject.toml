@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "manage-photo"
+version = "0.0.1"
+description = "test"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+boto3 = "^1.35.63"
+fastapi = "^0.115.5"
+uvicorn = "^0.32.0"
+pydantic-settings = "^2.6.1"
+email_validator = "^2.2.0"
+injector = "0.22.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
