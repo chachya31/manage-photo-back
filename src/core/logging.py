@@ -76,6 +76,9 @@ def log_error(e: Exception) -> None:
 
 
 def get_error_message(e: Exception) -> str:
-    tb = traceback.format_exception(type(e), e, e.__traceback__)
-    # 逆順にしてスタックトレースを取得
-    return "".join(tb[::-1])
+    try:
+        tb = traceback.format_exception(type(e), e, e.__traceback__)
+        # 逆順にしてスタックトレースを取得
+        return "".join(tb[::-1])
+    except Exception as e:
+        return e
