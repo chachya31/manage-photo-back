@@ -72,11 +72,11 @@ class AuthService:
             cognito (AWS_Cognito): AWSCognito
         """
         try:
-            response = cognito.resend_confirmation_code(email)
+            response = cognito.check_user_exists(email)
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == "UserNotFoundException":
                 raise HTTPException(
-                    status_code=404, detail="User deos not exist"
+                    status_code=404, detail="User does not exist"
                 )
             else:
                 raise HTTPException(status_code=500, detail="Internal Server")
@@ -90,7 +90,7 @@ class AuthService:
                     )
                 elif e.response["Error"]["Code"] == "LimitExceededException":
                     raise HTTPException(
-                        status_code=429, detail="User not found"
+                        status_code=429, detail="Limit exceeded"
                     )
                 else:
                     raise HTTPException(status_code=500, detail="Internal Server")
@@ -109,7 +109,7 @@ class AuthService:
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == "UserNotFoundException":
                 raise HTTPException(
-                    status_code=404, detail="User deos not exist"
+                    status_code=404, detail="User does not exist"
                 )
             elif e.response["Error"]["Code"] == "UserNotConfirmedException":
                 raise HTTPException(
@@ -137,7 +137,7 @@ class AuthService:
             cognito (AWS_Cognito): AWSCognito
         """
         try:
-            resposne = cognito.forgot_password(email)
+            response = cognito.forgot_password(email)
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == "UserNotFoundException":
                 raise HTTPException(
@@ -218,7 +218,7 @@ class AuthService:
                 )
             elif e.response["Error"]["Code"] == "NotAuthorizedException":
                 raise HTTPException(
-                    status_code=401, detail="Incorrect refresh token provided"
+                    status_code=401, detail="Invalid refresh token provided"
                 )
             elif e.response["Error"]["Code"] == "LimitExceededException":
                 raise HTTPException(
@@ -250,7 +250,7 @@ class AuthService:
                 )
             elif e.response["Error"]["Code"] == "NotAuthorizedException":
                 raise HTTPException(
-                    status_code=401, detail="Incorrect refresh token provided"
+                    status_code=401, detail="Invalid access token provided"
                 )
             elif e.response["Error"]["Code"] == "TooManyRequestsException":
                 raise HTTPException(
