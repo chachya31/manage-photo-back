@@ -1,4 +1,5 @@
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 from middleware.exception_handler import EnhancedTracebackMiddleware
 
 from init import app
@@ -8,6 +9,18 @@ app = app
 # ミドルウェア登録
 app.add_middleware(EnhancedTracebackMiddleware)
 
+origins = [
+    "http://localhost",
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def index():
