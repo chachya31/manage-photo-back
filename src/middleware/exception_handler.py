@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -54,3 +55,8 @@ class EnhancedTracebackMiddleware(BaseHTTPMiddleware):
                 ]
             )
             return JSONResponse(status_code=500, content=error.model_dump())
+
+
+@app.exception_handler(RequestValidationError)
+async def handler(request:Request, exc:RequestValidationError):
+    print(exc)

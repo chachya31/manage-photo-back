@@ -1,6 +1,8 @@
-from typing import Annotated
+import json
+
+from typing import Annotated, Any
 from annotated_types import MinLen, MaxLen
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class UserSignUp(BaseModel):
@@ -11,14 +13,39 @@ class UserSignUp(BaseModel):
     role: str
 
 
+class UserEmail(BaseModel):
+    email: EmailStr
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_to_json(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
+
+
 class UserVerify(BaseModel):
     email: EmailStr
     confirmation_code: Annotated[str, MaxLen(6)]
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_to_json(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
 
 
 class UserSignIn(BaseModel):
     email: EmailStr
     password: Annotated[str, MinLen(8)]
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_to_json(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
 
 
 class ConfirmForgotPassword(BaseModel):

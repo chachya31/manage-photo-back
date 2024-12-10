@@ -49,7 +49,7 @@ class AuthService:
                 )
             elif e.response["Error"]["Code"] == "ExpiredCodeException":
                 raise HTTPException(
-                    status_code=400, detail="The provided code has expired."
+                    status_code=403, detail="The provided code has expired."
                 )
             elif e.response["Error"]["Code"] == "UserNotFoundException":
                 raise HTTPException(

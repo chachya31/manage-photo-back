@@ -1,7 +1,7 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Form, status, Depends
 from pydantic import EmailStr
 
-from domain.entity.user import UserSignUp, UserVerify, UserSignIn, ConfirmForgotPassword, ChangePassword, RefreshToken, AccessToken
+from domain.entity.user import UserEmail, UserSignUp, UserVerify, UserSignIn, ConfirmForgotPassword, ChangePassword, RefreshToken, AccessToken
 from usecase.service.auth_service import AuthService
 from core.aws_cognito import AWS_Cognito
 from core.dependencies import get_aws_cognito
@@ -30,10 +30,10 @@ async def verify_account(
 # 認証コード再送信申請
 @auth_router.post("/resend_confirmation_code", status_code=status.HTTP_200_OK, tags=["Auth"])
 async def resend_confirmation_code(
-    email: EmailStr,
+    data: UserEmail = Form(...),
     cognito: AWS_Cognito = Depends(get_aws_cognito),
 ):
-    return AuthService.resend_confirmation_code(email, cognito)
+    return AuthService.resend_confirmation_code(data.email, cognito)
 
 
 # ログイン
