@@ -16,8 +16,6 @@ class AWS_Cognito:
 
     # ユーザ登録
     def user_signup(self, user: UserSignUp):
-        logging.info(AWS_REGION_NAME, AWS_COGNITO_APP_CLIENT_ID, AWS_COGNITO_USER_POOL_ID)
-        logging.info(user)
         response = self.client.sign_up(
             ClientId=AWS_COGNITO_APP_CLIENT_ID,
             Username=user.email,

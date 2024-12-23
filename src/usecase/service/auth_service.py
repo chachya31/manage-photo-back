@@ -23,6 +23,8 @@ class AuthService:
             logging.error(e)
             if e.response["Error"]["Code"] == "UsernameExistsException":
                 raise HTTPException(status_code=409, detail="An account with the given email already exists")
+            elif e.response["Error"]["Code"] == "InvalidParameterException":
+                raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
             else:
                 raise HTTPException(status_code=500, detail="Internal Server")
         else:
@@ -122,10 +124,17 @@ class AuthService:
             else:
                 raise HTTPException(status_code=500, detail="Internal Server")
         else:
+            userRes = cognito.check_user_exists(data.email)
+            user = userRes["UserAttributes"]
+            for att in user:
+                if att["Name"] == "custom:role":
+                    role = att["Value"]
+            
             content = {
                 "message": "User signed in successfully",
                 "AccessToken": response["AuthenticationResult"]["AccessToken"],
-                "RefreshToken": response["AuthenticationResult"]["RefreshToken"]
+                "RefreshToken": response["AuthenticationResult"]["RefreshToken"],
+                "role": role
             }
             return JSONResponse(content=content, status_code=200)
 
@@ -269,10 +278,8 @@ class AuthService:
             cognito (AWS_Cognito): AWSCognito
         """
         try:
-            logging.info(email)
             response = cognito.check_user_exists(email)
         except botocore.exceptions.ClientError as e:
-            logging.info(e)
             if e.response["Error"]["Code"] == "UserNotFoundException":
                 raise HTTPException(
                     status_code=404, detail="User does not exist"

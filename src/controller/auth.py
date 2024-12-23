@@ -48,10 +48,10 @@ async def signin(
 # パスワード忘れ：再発行申請
 @auth_router.post("/forgot_password", status_code=status.HTTP_200_OK, tags=["Auth"])
 async def forgot_password(
-    email: EmailStr,
+    data: UserEmail,
     cognito: AWS_Cognito = Depends(get_aws_cognito),
 ):
-    return AuthService.forgot_password(email, cognito)
+    return AuthService.forgot_password(data.email, cognito)
 
 
 # パスワード忘れ：パスワード変更
