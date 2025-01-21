@@ -10,7 +10,7 @@
   ```bash
   python -m venv venv 
   source venv/Scripts/activate
-  pip install email_validator pydantic-settings boto3 fastapi uvicorn injector python-multipart
+  pip install email_validator pydantic-settings boto3 fastapi uvicorn injector python-multipart 
   ```
 - 起動
   ```

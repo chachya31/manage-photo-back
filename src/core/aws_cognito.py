@@ -119,3 +119,9 @@ class AWS_Cognito:
             AccessToken=access_token
         )
         return response
+
+    def list_user(self):
+        response = self.client.list_users(
+            UserPoolId=AWS_COGNITO_USER_POOL_ID
+        )
+        return response

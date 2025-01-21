@@ -291,3 +291,27 @@ class AuthService:
             for attribute in response["UserAttributes"]:
                 user[attribute["Name"]] = attribute["Value"]
             return JSONResponse(content=user, status_code=200)
+        
+    def list_user(cognito: AWS_Cognito):
+        """ユーザ一覧取得
+
+        Args:
+            cognito (AWS_Cognito): AWSCognito
+        """
+        try:
+            response = cognito.list_user()
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "UserNotFoundException":
+                raise HTTPException(
+                    status_code=404, detail="User does not exist"
+                )
+            else:
+                raise HTTPException(status_code=500, detail="Internal Server")
+        else:
+            users = []
+            for user in response["Users"]:
+                member = {}
+                for attribute in user["Attributes"]:
+                    member[attribute["Name"]] = attribute["Value"]
+                users.append(member)
+            return JSONResponse(content=users, status_code=200)

@@ -1,19 +1,9 @@
-from fastapi import APIRouter, Form, status, Depends, Security, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, Form, status, Depends
 from pydantic import EmailStr
-from typing import Dict, List, Optional
-
-import requests
-
-from core.JWTBearer import JWTBearer
 from domain.entity.user import UserEmail, UserSignUp, UserVerify, UserSignIn, ConfirmForgotPassword, ChangePassword, RefreshToken, AccessToken
 from usecase.service.auth_service import AuthService
 from core.aws_cognito import AWS_Cognito
 from core.dependencies import get_aws_cognito
-from core.jwt import jwks, get_current_user
-
-from jose import jwt, jwk, JWTError
-from jose.utils import base64url_decode
 
 
 
@@ -108,65 +98,17 @@ async def logout(
 
 
 # ユーザ情報取得
-@auth_router.get("/user_details", status_code=status.HTTP_200_OK, tags=["Auth"])
-async def user_detail(
-    email: EmailStr,
+@auth_router.get("/user_detail", status_code=status.HTTP_200_OK, tags=["Auth"])
+async def user_details(
+    email: EmailStr = Form(),
     cognito: AWS_Cognito = Depends(get_aws_cognito)
 ):
     return AuthService.user_details(email, cognito)
 
-auth = JWTBearer(jwks)
 
-@auth_router.get("/test")
-async def test(username: str = Depends(get_current_user)):
-    return {"username": username}
-
-@auth_router.get("/secure", dependencies=[Depends(auth)])
-async def secure() -> bool:
-    return True
-
-@auth_router.get("/not_secure")
-async def not_secure() -> bool:
-    return True
-
-
-
-
-
-JWK = Dict[str, str]
-JWKS = Dict[str, List[JWK]]
-
-def get_jwks() -> JWKS:
-    return requests.get(f"https://cognito-idp.{AWS_REGION_NAME}.amazonaws.com/{AWS_COGNITO_USER_POOL_ID}/.well-known/jwks.json"
-                        ).json()
-
-@auth_router.get("/jwk", status_code=status.HTTP_200_OK, tags=["Auth"])
-async def test():
-    return get_jwks()
-
-SECRET_KEY = "XubcZ7xUyc3RPQk1ckFuWVnKABapAKLl74S3+zCI"
-ALGORITHM = "RS256"
-
-security = HTTPBearer()
-
-def get_current_users(
-    token: HTTPAuthorizationCredentials = Security(security)
+@auth_router.get("/list", status_code=status.HTTP_200_OK, tags=["Auth"])
+async def list_user(
+    cognito: AWS_Cognito = Depends(get_aws_cognito)
 ):
-    try:
-        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        if user_id is None:
-            raise HTTPException(status_code=403, detail="Invalid authentication credentials")
-        return user_id
-    except JWTError:
-        raise HTTPException(status_code=403, detail="Invalid token or expired token")
-
-@auth_router.get("/", status_code=status.HTTP_200_OK, tags=["Auth"])
-def read_protected(
-    user_id: str = Depends(get_current_users)
-):
-    return { "user_id": user_id }
-
-# @auth_router.get("/", status_code=status.HTTP_200_OK, tags=["Auth"])
-# async def verify_token()
+    return AuthService.list_user(cognito)
 
