@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Form, status, Depends
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import EmailStr
 from domain.entity.user import UserEmail, UserSignUp, UserVerify, UserSignIn, ConfirmForgotPassword, ChangePassword, RefreshToken, AccessToken
 from usecase.service.auth_service import AuthService
@@ -14,7 +15,7 @@ AWS_COGNITO_APP_CLIENT_ID = env_vars.AWS_COGNITO_APP_CLIENT_ID
 AWS_COGNITO_USER_POOL_ID = env_vars.AWS_COGNITO_USER_POOL_ID
 
 auth_router = APIRouter(prefix="/api/v1/auth")
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # ユーザ登録
 @auth_router.post('/signup', status_code=status.HTTP_201_CREATED, tags=["Auth"])
@@ -92,7 +93,8 @@ async def new_access_token(
 @auth_router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, tags=["Auth"])
 async def logout(
     access_token: AccessToken,
-    cognito: AWS_Cognito = Depends(get_aws_cognito)
+    cognito: AWS_Cognito = Depends(get_aws_cognito),
+    token: str = Depends(oauth2_scheme),
 ):
     return AuthService.logout(access_token.access_token, cognito)
 

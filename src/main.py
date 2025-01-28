@@ -4,6 +4,7 @@ from middleware.exception_handler import EnhancedTracebackMiddleware
 
 from init import app
 from controller.auth import auth_router
+from controller.movie import movie_router
 
 app = app
 # ミドルウェア登録
@@ -26,8 +27,8 @@ app.add_middleware(
 def index():
     return {"message": "Authentication service"}
 
-
 app.include_router(auth_router)
+app.include_router(movie_router)
 
 # デバッグ
 if __name__ == "__main__":
