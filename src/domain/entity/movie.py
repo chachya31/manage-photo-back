@@ -1,5 +1,6 @@
 import json
 
+from decimal import Decimal
 from typing import Annotated, Any
 from annotated_types import MinLen, MaxLen, Ge, Le
 from pydantic import BaseModel, EmailStr, Field, model_validator
@@ -9,6 +10,19 @@ from pydantic.dataclasses import dataclass
 class MovieInfo:
     plot: str
     rating: float
+
+class MovieForm(BaseModel):
+    year: Annotated[int, Field(ge=1972, le=2100)]
+    title: Annotated[str, MaxLen(30)]
+    plot: Annotated[str, MaxLen(30)]
+    rating: Annotated[float, Field(ge=0, le=5)]
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_to_json(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
 
 @dataclass
 class Movie:
@@ -32,6 +46,19 @@ class Movie:
         movie_info = MovieInfo(plot=plot, rating=rating)
         movie = Movie(year, title, movie_info)
         return movie
+    
+    @staticmethod
+    def to_db(form: MovieForm):
+        return {
+            "PK": f"Movie|{form.year}",
+            "SK": form.title,
+            "GSI1PK": "Movie",
+            "GSI1SK": "-",
+            "info": {
+                "plot": form.plot,
+                "rating": Decimal(form.rating),
+            },
+        }
 
     @model_validator(mode='before')
     @classmethod
@@ -40,18 +67,5 @@ class Movie:
             return cls(**json.loads(value))
         return value
     
-    def __post_init__(self):
-        print(f'Second: {self.info}')
-
-class MovieForm(BaseModel):
-    year: Annotated[int, Field(ge=1972, le=2100)]
-    title: Annotated[str, MaxLen(30)]
-    plot: Annotated[str, MaxLen(30)]
-    rating: Annotated[float, Field(ge=0, le=5)]
-
-    @model_validator(mode='before')
-    @classmethod
-    def validate_to_json(cls, value: Any) -> Any:
-        if isinstance(value, str):
-            return cls(**json.loads(value))
-        return value
+    # def __post_init__(self):
+    #     print(f'Second: {self.info}')

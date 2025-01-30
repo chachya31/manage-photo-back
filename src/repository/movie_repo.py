@@ -1,19 +1,20 @@
-from decimal import Decimal
 from io import BytesIO
 import logging
 import os
 from pprint import pprint
 from zipfile import ZipFile
 import boto3
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
+from decimal import Decimal
 
-from domain.entity.movie import Movie
+from domain.entity.movie import Movie, MovieForm
 from usecase.interface.i_movie_repo import IMovieRepo
 
 LOGGER = logging.getLogger(__name__)
 
 class MovieRepo(IMovieRepo):
+
     def __init__(self):
         self.__table_name = "dev-manage-photo"
         self.__client = boto3.resource("dynamodb", endpoint_url="http://localhost:3000")
@@ -118,15 +119,10 @@ class MovieRepo(IMovieRepo):
         else:
             return tables
     
-    def add_movie(self, data: Movie):
+    def add_movie(self, data: MovieForm):
+        item = Movie.to_db(data)
         try:
-            self.__table.put_item(
-                Item={
-                    "PK": f"Movie|{str(data.year)}|{data.title}",
-                    "SK": "-",
-                    "info": {"plot": data.info.plot, "rating": Decimal(data.info.rating)}
-                }
-            )
+            self.__table.put_item(Item=item)
         except ClientError as err:
             LOGGER.error(
                 "Couldn't add movie %s to table %s. Here's why: %s: %s",
@@ -137,9 +133,9 @@ class MovieRepo(IMovieRepo):
             )
             raise
     
-    def get_movie(self, title, year):
+    def get_movie(self, year, title):
         try:
-            response = self.__table.get_item(Key={"PK": str(year), "SK": title})
+            response = self.__table.get_item(Key={"PK": f"Movie|{str(year)}", "SK": title})
         except ClientError as err:
             LOGGER.error(
                 "Couldn't get movie %s from table %s. Here's why: %s: %s",
@@ -148,19 +144,24 @@ class MovieRepo(IMovieRepo):
                 err.response["Error"]["Code"],
                 err.response["Error"]["Message"],
             )
+        else:
+            if not "Item" in response:
+                return None
+            
+            return response["Item"]
     
-    def update_movie(self, title, year, rating, plot):
+    def update_movie(self, data: MovieForm):
         try:
             response = self.__table.update_item(
-                Key={"PK": f"Movie|{str(year)}|{title}", "SK": "-"},
+                Key={"PK": f"Movie|{str(data.year)}", "SK": data.title},
                 UpdateExpression="set info.rating=:r, info.plot=:p",
-                ExpressionAttributeValues={":r": Decimal(str(rating)), ":p": plot},
+                ExpressionAttributeValues={":r": Decimal(data.rating), ":p": data.plot},
                 ReturnValues="UPDATED_NEW",
             )
         except ClientError as err:
             LOGGER.error(
                 "Couldn't update movie %s in table %s. Here's why: %s: %s",
-                title,
+                data.title,
                 self.__table.name,
                 err.response["Error"]["Code"],
                 err.response["Error"]["Message"],
@@ -187,8 +188,11 @@ class MovieRepo(IMovieRepo):
     
     def list_movie(self):
         try:
-            key_condition = Key("PK").begins_with(f"Movie|")
-            kwargs = {"KeyConditionExpression": key_condition}
+            key_condition = Key("GSI1PK").eq("Movie")
+            kwargs = {
+                "IndexName": "GSIndex1",
+                "KeyConditionExpression": key_condition
+            }
             response = self.__table.query(**kwargs)
         except ClientError as err:
             LOGGER.error(

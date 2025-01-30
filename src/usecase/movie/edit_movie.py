@@ -22,4 +22,4 @@ class AddMovieUsecase(Usecase):
         table_exists = self.__movie_repo.exists()
         if not table_exists:
             self.__movie_repo.create_table()
-        return self.__movie_repo.add_movie(body)
+        return self.__movie_repo.update_movie(body)

@@ -1,6 +1,8 @@
 
 from abc import ABC, abstractmethod
 
+from domain.entity.movie import MovieForm
+
 class IMovieRepo(ABC):
     @abstractmethod
     def exists(self) -> bool:
@@ -21,7 +23,7 @@ class IMovieRepo(ABC):
         """
 
     @abstractmethod
-    def add_movie(self, title, year, plot, rating):
+    def add_movie(self, data: MovieForm):
         """_summary_
 
         Args:
@@ -33,16 +35,16 @@ class IMovieRepo(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_movie(self, title, year):
+    def get_movie(self, year, title):
         """_summary_
 
         Args:
-            title (_type_): _description_
             year (_type_): _description_
+            title (_type_): _description_
         """
 
     @abstractmethod
-    def update_movie(self, title, year, rating, plot):
+    def update_movie(self, data: MovieForm):
         """_summary_
 
         Args:
